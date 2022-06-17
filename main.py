@@ -1,6 +1,4 @@
-
 import telebot
-
 from telebot import types
 from datetime import datetime
 
@@ -27,13 +25,14 @@ def mainmenu():
 @bot.message_handler(commands=['start'])
 def start(message):
     keyboard_1 = mainmenu()
-    # можно вставить картинку с приветствием 
-    bot.send_message(message.chat.id,
-                     'Привет я бот отеля <b>"Gratia"</b>, кликайте по кнопкам меню или задайте вопрос администратору',
-                     reply_markup=keyboard_1, parse_mode='HTML')
+    # можно вставить картинку с приветствием
+    bot.send_message(message.chat.id, """
+Привет, я бот отеля <b>"Gratia"</b>, 
+переходите по кнопкам меню или задавайте вопрос администратору
+""", reply_markup=keyboard_1, parse_mode='HTML')
 
 
-@bot.message_handler(content_types=['text'])  # возвращает вопрос администратора
+@bot.message_handler(content_types=['text'])  # возвращает вопрос администратору
 def all_messages(message):
     bot.forward_message(TO_CHAT_ID, message.chat.id, message.message_id)
 
@@ -42,11 +41,12 @@ def all_messages(message):
 def answer_callback(callback):
     if callback.data == 'btn4':
         kb = types.InlineKeyboardMarkup(row_width=2)
+        back = types.InlineKeyboardButton(text='Главное меню', callback_data='btn_back')
         gps_yandex = types.InlineKeyboardButton(text='Перейти в Yandex карты',
                                                 url='https://yandex.ru/maps/-/CCUJVQgPHA')
         gps_google = types.InlineKeyboardButton(text='Перейти в Google карты',
                                                 url='https://g.page/WhitePeakHotel?share')
-        kb.add(gps_yandex, gps_google)
+        kb.add(gps_yandex, gps_google, back)
         bot.send_message(callback.message.chat.id, """
 <b>Наши контакты:</b>
 Адрес: г. Асирис, ул. Одиссея д.1
@@ -63,19 +63,16 @@ email: nikbot.hotel@gmail.com
         bot.send_message(callback.message.chat.id,
                          '<b>Местное время:</b>\n' + str(datetime.now().strftime("%d.%m.%Y, %H:%M")), parse_mode='HTML')
 
-    elif callback.data == 'btn2':  # возвращает сообщение с "Что поблизости?"
-        # kb = types.InlineKeyboardMarkup(row_width=1)
-        # weather_ = types.InlineKeyboardButton(text='необходимо спарсить сайт с погодой', callback_data='btn_weather')
-        # kb.add(weather_)
-        bot.send_message(callback.message.chat.id,
-                         'Супермаркеты, Аптеки, Автовокзал')  # добавить картинки с изображениями
+    elif callback.data == 'btn2':
+        shema = open('shema.png', 'rb')
+        bot.send_photo(callback.message.chat.id, shema, reply_markup=mainmenu())
 
     elif callback.data == 'btn3':  # информация о ресторане или кафе, также возможен лобибар и буфет
         bot.send_message(callback.message.chat.id, """
-Бар расположен на 1-ом этаже
+Бар и кафе расположены на 1-ом этаже 
 Ресторан находится на территории отеля в 1-м корпусе
-Завтрак в номер, для заказа свяжитесь с администратором по номеру тел. +79168697207
-""")
+Завтрак в номер, для заказа свяжитесь с администратором по номеру тел. +79168697207 
+""")  # можно добавить кнопку для заказа завтрака, в которой будет инфа о меню в виде красиво оформленной картинки и форме заказа
 
     elif callback.data == 'btn1':
         photo_hotel = open('HOTEL.png', 'rb')
@@ -87,17 +84,11 @@ email: nikbot.hotel@gmail.com
 Все номера в мягких тонах обставлены специально подобранной мебелью и оформлены в современном стиле.
 В распоряжении гостей кондиционер, телевизор.
 В некоторых номерах обустроена гостиная зона.
-Ванная комната с ванной или душем укомплектована тапочками, бесплатными туалетно-косметическими принадлежностями и феном.
-Стойка регистрации открыта круглосуточно. По запросу и за дополнительную плату организуется трансфер от/до аэропорта.
-От отеля Gratia до Национального сада — 400 метров, а до центральной площади — 500 метров.
-Расстояние до аэропорта имени Циклопа одноглазого составляет 38 км.
-Расстояние до железнодорожного вокзала составляет 8 км.
-Это любимая часть города Гротеска среди наших гостей согласно независимым отзывам.
-""", parse_mode='HTML')
+""", parse_mode='HTML', reply_markup=mainmenu())
         kb = types.InlineKeyboardMarkup(row_width=1)  # добавляем кнопку с возвратом в меню
         return_back = types.InlineKeyboardButton(text='Главное меню', callback_data='return_back')
         kb.add(return_back)
-        bot.send_message(callback.message.chat.id, 'вернуться в главное меню', reply_markup=kb)
+        bot.send_message(callback.message.chat.id, reply_markup=mainmenu())
 
     elif callback.data == 'btn6':
         uslugimenu = types.InlineKeyboardMarkup(row_width=2)
@@ -109,6 +100,9 @@ email: nikbot.hotel@gmail.com
                          reply_markup=uslugimenu)
 
     elif callback.data == 'btn_free':
+        kb = types.InlineKeyboardMarkup(row_width=2)
+        back = types.InlineKeyboardButton(text='Главное меню', callback_data='btn_back')
+        kb.add(back)
         bot.send_message(callback.message.chat.id, """
 Бесплатный <b>wifi</b>
 Бесплатная парковка на территории отеля
@@ -116,20 +110,23 @@ email: nikbot.hotel@gmail.com
 Уборка номера один раз в день
 Камера хранения
 Услуга "звонок-будильник"
-""", parse_mode='HTML')
+""", reply_markup=kb, parse_mode='HTML')
 
     elif callback.data == 'btn_not_free':
+        kb = types.InlineKeyboardMarkup(row_width=2)
+        back = types.InlineKeyboardButton(text='Главное меню', callback_data='btn_back')
+        kb.add(back)
         bot.send_message(callback.message.chat.id, """
-<b>Сейф у администратора</b>        
+<b>Сейф у администратора:</b>  
+<i>аренда сейфа в сутки-750р</i>
 <b>Трансфер:</b> 
-до ЖД вокзала г.Асириса - 1000р
-до аэропорта им.Кандинского - 1700р
+<i>до ЖД вокзала г.Асириса - 1000р</i>
+<i>до аэропорта им.Кандинского - 1700р</i>
 <b>Дополнительная уборка номера</b> - 350р
 <b>Прачечная:</b> 
-За дополнительную плату гости могут заказать услуги стирки. 
-Для этого необходимо обратиться к администратору.
-
-""", parse_mode='HTML')
+<i>За дополнительную плату гости могут заказать услуги стирки. 
+Для этого необходимо обратиться к администратору.</i>
+""", reply_markup=kb, parse_mode='HTML')
 
     elif callback.data == 'btn_back':
         bot.send_message(callback.message.chat.id, 'вы вернулись в главное меню', reply_markup=mainmenu())
